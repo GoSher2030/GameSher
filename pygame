@@ -1,0 +1,264 @@
+import pygame
+import sys
+import random
+import math
+
+pygame.init()
+
+WIDTH, HEIGHT = 700, 800
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("GameSher")
+
+font_big = pygame.font.SysFont("Arial", 70, bold=True)
+font_mid = pygame.font.SysFont("Arial", 35)
+font_small = pygame.font.SysFont("Arial", 25)
+
+BG = (10, 10, 20)
+NEON_BLUE = (0, 255, 255)
+NEON_PINK = (255, 0, 180)
+WHITE = (240, 240, 240)
+
+board = [""] * 9
+current_player = "X"
+
+game_mode = None
+difficulty = None
+state = "menu"
+
+winner = None
+
+
+def draw_text(text, font, color, x, y):
+    img = font.render(text, True, color)
+    rect = img.get_rect(center=(x, y))
+    screen.blit(img, rect)
+
+
+def draw_button(text, x, y, w, h):
+    pygame.draw.rect(screen, NEON_BLUE, (x, y, w, h), 3)
+    draw_text(text, font_mid, WHITE, x + w // 2, y + h // 2)
+
+
+def draw_board():
+    for i in range(1, 3):
+        pygame.draw.line(screen, NEON_BLUE, (0, i * 200),
+                         (600, i * 200), 5)
+        pygame.draw.line(screen, NEON_BLUE, (i * 200, 0),
+                         (i * 200, 600), 5)
+
+    for i in range(9):
+        x = (i % 3) * 200 + 100
+        y = (i // 3) * 200 + 100
+
+        if board[i] == "X":
+            draw_text("X", font_big, NEON_PINK, x, y)
+        elif board[i] == "O":
+            draw_text("O", font_big, NEON_BLUE, x, y)
+
+
+def check_winner(brd):
+    wins = [
+        (0,1,2),(3,4,5),(6,7,8),
+        (0,3,6),(1,4,7),(2,5,8),
+        (0,4,8),(2,4,6)
+    ]
+
+    for a,b,c in wins:
+        if brd[a] != "" and brd[a] == brd[b] == brd[c]:
+            return brd[a]
+
+    if "" not in brd:
+        return "Draw"
+
+    return None
+
+
+def easy_bot():
+    empty = [i for i, v in enumerate(board) if v == ""]
+    return random.choice(empty)
+
+
+def medium_bot():
+    for i in range(9):
+        if board[i] == "":
+            board[i] = "O"
+            if check_winner(board) == "O":
+                board[i] = ""
+                return i
+            board[i] = ""
+
+    for i in range(9):
+        if board[i] == "":
+            board[i] = "X"
+            if check_winner(board) == "X":
+                board[i] = ""
+                return i
+            board[i] = ""
+
+    return easy_bot()
+
+
+def minimax(brd, depth, is_max):
+    result = check_winner(brd)
+
+    if result == "O":
+        return 1
+    if result == "X":
+        return -1
+    if result == "Draw":
+        return 0
+
+    if is_max:
+        best = -999
+        for i in range(9):
+            if brd[i] == "":
+                brd[i] = "O"
+                score = minimax(brd, depth + 1, False)
+                brd[i] = ""
+                best = max(score, best)
+        return best
+    else:
+        best = 999
+        for i in range(9):
+            if brd[i] == "":
+                brd[i] = "X"
+                score = minimax(brd, depth + 1, True)
+                brd[i] = ""
+                best = min(score, best)
+        return best
+
+
+def hard_bot():
+    best_score = -999
+    move = None
+
+    for i in range(9):
+        if board[i] == "":
+            board[i] = "O"
+            score = minimax(board, 0, False)
+            board[i] = ""
+
+            if score > best_score:
+                best_score = score
+                move = i
+
+    return move
+
+
+def bot_move():
+    global current_player
+
+    if difficulty == "easy":
+        move = easy_bot()
+
+    elif difficulty == "medium":
+        move = medium_bot()
+
+    else:
+        move = hard_bot()
+
+    board[move] = "O"
+    current_player = "X"
+
+
+while True:
+    screen.fill(BG)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+
+            mx, my = pygame.mouse.get_pos()
+
+            if state == "menu":
+
+                if 200 <= mx <= 500 and 300 <= my <= 370:
+                    game_mode = "2p"
+                    board = [""] * 9
+                    state = "game"
+
+                if 200 <= mx <= 500 and 420 <= my <= 490:
+                    state = "difficulty"
+
+            elif state == "difficulty":
+
+                if 200 <= mx <= 500 and 250 <= my <= 320:
+                    difficulty = "easy"
+                    game_mode = "bot"
+                    board = [""] * 9
+                    state = "game"
+
+                elif 200 <= mx <= 500 and 380 <= my <= 450:
+                    difficulty = "medium"
+                    game_mode = "bot"
+                    board = [""] * 9
+                    state = "game"
+
+                elif 200 <= mx <= 500 and 510 <= my <= 580:
+                    difficulty = "hard"
+                    game_mode = "bot"
+                    board = [""] * 9
+                    state = "game"
+
+            elif state == "game":
+
+                if my <= 600:
+                    col = mx // 200
+                    row = my // 200
+                    idx = row * 3 + col
+
+                    if board[idx] == "":
+                        board[idx] = current_player
+
+                        result = check_winner(board)
+
+                        if result:
+                            winner = result
+                            state = "end"
+                        else:
+                            current_player = "O" if current_player == "X" else "X"
+
+                            if game_mode == "bot" and current_player == "O":
+                                bot_move()
+
+                                result = check_winner(board)
+                                if result:
+                                    winner = result
+                                    state = "end"
+
+            elif state == "end":
+                board = [""] * 9
+                current_player = "X"
+                state = "menu"
+
+    if state == "menu":
+        draw_text("GameSher", font_big, NEON_PINK, WIDTH // 2, 150)
+
+        draw_button("2 игрока", 200, 300, 300, 70)
+        draw_button("1 игрок", 200, 420, 300, 70)
+
+    elif state == "difficulty":
+        draw_text("Сложность", font_big, NEON_PINK, WIDTH // 2, 150)
+
+        draw_button("Лёгкая", 200, 250, 300, 70)
+        draw_button("Средняя", 200, 380, 300, 70)
+        draw_button("Сложная", 200, 510, 300, 70)
+
+    elif state == "game":
+        draw_board()
+
+    elif state == "end":
+        if winner == "Draw":
+            draw_text("Ничья", font_big, NEON_BLUE,
+                      WIDTH // 2, HEIGHT // 2)
+        else:
+            draw_text(f"Победил {winner}", font_big,
+                      NEON_PINK, WIDTH // 2, HEIGHT // 2)
+
+        draw_text("Нажмите мышкой", font_mid,
+                  WHITE, WIDTH // 2, HEIGHT // 2 + 100)
+
+    pygame.display.flip()
