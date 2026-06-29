@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>GameSher</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>GameSher</h1>
+
+<div class="menu">
+    <button onclick="startTwoPlayers()">2 игрока</button>
+    <button onclick="showDifficulty()">1 игрок</button>
+</div>
+
+<div id="difficulty" style="display:none;">
+    <button onclick="startBot('easy')">Лёгкая</button>
+    <button onclick="startBot('medium')">Средняя</button>
+    <button onclick="startBot('hard')">Сложная</button>
+</div>
+
+<div id="board"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
