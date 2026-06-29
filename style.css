@@ -1,0 +1,40 @@
+body {
+    background: #050510;
+    color: cyan;
+    text-align: center;
+    font-family: Arial;
+}
+
+h1 {
+    font-size: 70px;
+    color: #ff00ff;
+    text-shadow: 0 0 20px #ff00ff;
+}
+
+button {
+    background: transparent;
+    color: cyan;
+    border: 2px solid cyan;
+    padding: 15px 30px;
+    margin: 10px;
+    font-size: 25px;
+    cursor: pointer;
+}
+
+#board {
+    width: 450px;
+    margin: 40px auto;
+    display: grid;
+    grid-template-columns: repeat(3, 150px);
+}
+
+.cell {
+    width: 150px;
+    height: 150px;
+    border: 2px solid cyan;
+    font-size: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
